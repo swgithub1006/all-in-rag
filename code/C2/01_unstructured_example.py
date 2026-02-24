@@ -1,7 +1,9 @@
 from unstructured.partition.auto import partition
+import os
 
 # PDF文件路径
-pdf_path = "../../data/C2/pdf/rag.pdf"
+_base_dir = os.path.dirname(__file__)
+pdf_path = os.path.abspath(os.path.join(_base_dir, "../../data/C2/pdf/rag.pdf"))
 
 # 使用Unstructured加载并解析PDF文档
 elements = partition(

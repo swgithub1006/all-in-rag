@@ -1,7 +1,9 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
+import os
 
-loader = TextLoader("../../data/C2/txt/蜂医.txt", encoding="utf-8")
+_base_dir = os.path.dirname(__file__)
+loader = TextLoader(os.path.abspath(os.path.join(_base_dir, "../../data/C2/txt/蜂医.txt")), encoding="utf-8")
 docs = loader.load()
 
 text_splitter = RecursiveCharacterTextSplitter(
