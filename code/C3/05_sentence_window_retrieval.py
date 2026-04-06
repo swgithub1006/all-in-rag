@@ -1,17 +1,20 @@
 import os
 from llama_index.core.node_parser import SentenceWindowNodeParser, SentenceSplitter
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
-from llama_index.llms.deepseek import DeepSeek
+# from llama_index.llms.deepseek import DeepSeek
+from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 
 # 1. 配置模型
-Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
+# Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
+Settings.llm = Ollama(model="deepseek-r1:8b",base_url="http://127.0.0.1:11434",request_timeout=360.0,additional_kwargs={"num_ctx": 4096})
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en")
 
 # 2. 加载文档
+_base_dir = os.path.dirname(__file__)
 documents = SimpleDirectoryReader(
-    input_files=["../../data/C3/pdf/IPCC_AR6_WGII_Chapter03.pdf"]
+    input_files=[os.path.join(_base_dir, "../../data/C3/pdf/IPCC_AR6_WGII_Chapter03.pdf")]
 ).load_data()
 
 # 3. 创建节点与构建索引

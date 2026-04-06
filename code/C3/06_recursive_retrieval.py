@@ -6,18 +6,21 @@ from llama_index.core.schema import IndexNode
 from llama_index.experimental.query_engine import PandasQueryEngine
 from llama_index.core.retrievers import RecursiveRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.llms.deepseek import DeepSeek
+# from llama_index.llms.deepseek import DeepSeek
+from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import Settings
 
 load_dotenv()
 
 # 配置模型
-Settings.llm = DeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
+# Settings.llm = DeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
+Settings.llm = Ollama(model="deepseek-r1:8b",base_url="http://127.0.0.1:11434",request_timeout=360.0,additional_kwargs={"num_ctx": 4096})
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh-v1.5")
 
 # 1.加载数据并为每个工作表创建查询引擎和摘要节点
-excel_file = '../../data/C3/excel/movie.xlsx'
+_base_dir = os.path.dirname(__file__)
+excel_file = os.path.join(_base_dir, '../../data/C3/excel/movie.xlsx')
 xls = pd.ExcelFile(excel_file)
 
 df_query_engines = {}
@@ -27,7 +30,14 @@ for sheet_name in xls.sheet_names:
     df = pd.read_excel(xls, sheet_name=sheet_name)
     
     # 为当前工作表（DataFrame）创建一个 PandasQueryEngine
-    query_engine = PandasQueryEngine(df=df, llm=Settings.llm, verbose=True)
+    # 针对 deepseek-r1 等模型，明确要求只输出代码，不包含思考过程
+    instruction_str = (
+        "1. Convert the query to python code using a pandas dataframe named 'df'.\n"
+        "2. The python code should be a one-liner that returns the answer.\n"
+        "3. Output ONLY the python code. Do NOT include any thoughts, explanations, or markdown code blocks.\n"
+        "4. Do NOT use the <think> tag."
+    )
+    query_engine = PandasQueryEngine(df=df, llm=Settings.llm, verbose=True, instruction_str=instruction_str)
     
     # 为当前工作表创建一个摘要节点（IndexNode）
     year = sheet_name.replace('年份_', '')
